@@ -1,7 +1,7 @@
 import sqlite3
 from lib.models.author import Author
 from lib.models.magazine import Magazine
-from lib.models.article import Article  # adjust import paths accordingly
+from lib.models.article import Article  
 
 def setup_db(cursor):
     cursor.execute("""

@@ -1,5 +1,5 @@
 import sqlite3
-from lib.models.magazine import Magazine  # adjust path as needed
+from lib.models.magazine import Magazine 
 
 def setup_db(cursor):
     cursor.execute("""

@@ -1,7 +1,7 @@
 class Article:
     def __init__(self, id=None, title=None, author_id=None, magazine_id=None):
         self._id = id
-        self.title = title  # setter validation could be added if you want
+        self.title = title 
         self.author_id = author_id
         self.magazine_id = magazine_id
 
@@ -22,7 +22,7 @@ class Article:
         self._title = value
 
     def create_article(self, cursor):
-        """Insert this article into the database."""
+      
         if self.author_id is None or self.magazine_id is None:
             raise ValueError("Author ID and Magazine ID must be set before creating an article.")
         cursor.execute(
