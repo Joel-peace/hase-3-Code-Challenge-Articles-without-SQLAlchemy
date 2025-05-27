@@ -1,49 +1,103 @@
-class Author:
-    def __init__(self, id=None, name=None):
-        self._id = id
-        self.name = name 
+import sqlite3
+import pytest
+from lib.models.author import Author
 
-    @property
-    def id(self):
-        return self._id
+def setup_db(cursor):
+    cursor.execute("""
+    CREATE TABLE authors (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+    )
+    """)
+    cursor.execute("""
+    CREATE TABLE magazines (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+    )
+    """)
+    cursor.execute("""
+    CREATE TABLE articles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        author_id INTEGER NOT NULL,
+        magazine_id INTEGER NOT NULL,
+        FOREIGN KEY(author_id) REFERENCES authors(id),
+        FOREIGN KEY(magazine_id) REFERENCES magazines(id)
+    )
+    """)
 
-    @property
-    def name(self):
-        return self._name
+def test_create_author():
+    conn = sqlite3.connect(":memory:")
+    cursor = conn.cursor()
+    setup_db(cursor)
 
-    @name.setter
-    def name(self, value):
-        if not isinstance(value, str):
-            raise TypeError("Name must be a string.")
-        if not value.strip():
-            raise ValueError("Name must not be empty.")
-        if hasattr(self, '_name') and self._name is not None:
-            raise AttributeError("Name cannot be changed after instantiation.")
-        self._name = value
+    author = Author(name="John")
+    author.create_author(cursor)
+    conn.commit()
 
-    def create_author(self, cursor):
-        """Insert this author into the database."""
-        cursor.execute("INSERT INTO authors (name) VALUES (?)", (self._name,))
-        self._id = cursor.lastrowid
+    assert author.id is not None
+    assert author.name == "John"
 
-    @classmethod
-    def get_all_authors(cls, cursor):
-        """Fetch all authors from the database."""
-        cursor.execute("SELECT id, name FROM authors")
-        authors_data = cursor.fetchall()
-        return [cls(id=row[0], name=row[1]) for row in authors_data]
+    conn.close()
 
-    def articles(self, cursor):
-        """Get all articles written by this author."""
-        cursor.execute("SELECT * FROM articles WHERE author_id = ?", (self._id,))
-        return cursor.fetchall()
+def test_create_author_jane():
+    conn = sqlite3.connect(":memory:")
+    cursor = conn.cursor()
+    setup_db(cursor)
 
-    def magazines(self, cursor):
-        """Get all magazines linked to this author's articles."""
-        cursor.execute("""
-            SELECT DISTINCT m.*
-            FROM magazines m
-            JOIN articles a ON m.id = a.magazine_id
-            WHERE a.author_id = ?
-        """, (self._id,))
-        return cursor.fetchall()
+    author = Author(name="Jane")
+    author.create_author(cursor)
+    conn.commit()
+
+    assert author.id is not None
+    assert author.name == "Jane"
+
+    conn.close()
+
+def test_get_all_authors_with_john_and_jane():
+    conn = sqlite3.connect(":memory:")
+    cursor = conn.cursor()
+    setup_db(cursor)
+
+    author1 = Author(name="John")
+    author1.create_author(cursor)
+
+    author2 = Author(name="Jane")
+    author2.create_author(cursor)
+
+    conn.commit()
+
+    authors = Author.get_all_authors(cursor)
+    names = [a.name for a in authors]
+
+    assert "John" in names
+    assert "Jane" in names
+
+    conn.close()
+
+def test_articles_for_john_empty():
+    conn = sqlite3.connect(":memory:")
+    cursor = conn.cursor()
+    setup_db(cursor)
+
+    author = Author(name="John")
+    author.create_author(cursor)
+    conn.commit()
+
+    articles = author.articles(cursor)
+    assert articles == []
+
+    conn.close()
+
+def test_multiple_authors_count():
+    conn = sqlite3.connect(":memory:")
+    cursor = conn.cursor()
+    setup_db(cursor)
+
+    names = ["John", "Jane", "John", "Jane"]
+    for name in names:
+        author = Author(name=name)
+        author.create_author(cursor)
+
+    conn.commit()
+    conn.close()
