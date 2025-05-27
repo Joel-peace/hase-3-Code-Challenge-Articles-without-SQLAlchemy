@@ -25,7 +25,6 @@ class Magazine:
     @property
     def category(self):
         return self._category
-    
 
     @category.setter
     def category(self, value):
@@ -37,27 +36,25 @@ class Magazine:
             raise AttributeError("Category cannot be changed after instantiation.")
         self._category = value
 
-
-
     def create_magazine(self, cursor):
-      
+        """Insert this magazine into the database."""
         cursor.execute("INSERT INTO magazines (name, category) VALUES (?, ?)", (self._name, self._category))
         self._id = cursor.lastrowid
 
     @classmethod
     def get_all_magazines(cls, cursor):
-      
+        """Fetch all magazines from the database."""
         cursor.execute("SELECT id, name, category FROM magazines")
         magazines_data = cursor.fetchall()
         return [cls(id=row[0], name=row[1], category=row[2]) for row in magazines_data]
 
     def articles(self, cursor):
-        
+        """Get all articles published in this magazine."""
         cursor.execute("SELECT * FROM articles WHERE magazine_id = ?", (self._id,))
         return cursor.fetchall()
 
     def contributors(self, cursor):
-       
+        """Get all distinct authors who contributed articles to this magazine."""
         cursor.execute("""
             SELECT DISTINCT a.*
             FROM authors a

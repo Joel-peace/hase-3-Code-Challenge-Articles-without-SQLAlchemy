@@ -1,5 +1,5 @@
 import sqlite3
-from lib.models.magazine import Magazine 
+from lib.models.magazine import Magazine  
 
 def setup_db(cursor):
     cursor.execute("""
@@ -42,7 +42,7 @@ def test_magazine():
     for m in magazines:
         print(f"id={m.id}, name={m.name}, category={m.category}")
 
-    # No articles yet
+    
     print("Articles for magazine:", mag.articles(cursor))
     print("Contributors for magazine:", mag.contributors(cursor))
 
